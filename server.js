@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const bcrypt = require("bcrypt"); // <-- nuevo
 
 const User = require("./models/User");
 
@@ -18,7 +19,6 @@ app.get('/api/pingdb', async (req, res) => {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
-
 
 // Conectar a MongoDB
 mongoose
@@ -52,8 +52,11 @@ app.post("/api/usuarios", async (req, res) => {
       return res.status(400).json({ error: "Email ya registrado" });
     }
 
-    // En un sistema real, aquí se debe hashear la contraseña (bcrypt)
-    const nuevoUsuario = new User({ nombre, email, rol, password });
+    // Hashear contraseña antes de guardar
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    const nuevoUsuario = new User({ nombre, email, rol, password: hashedPassword });
     await nuevoUsuario.save();
 
     const userSinPassword = {
@@ -72,7 +75,7 @@ app.post("/api/usuarios", async (req, res) => {
 app.put("/api/usuarios/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, email, rol } = req.body;
+    const { nombre, email, rol, password } = req.body; // <-- agregué password
 
     const usuario = await User.findById(id);
     if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
@@ -80,6 +83,13 @@ app.put("/api/usuarios/:id", async (req, res) => {
     usuario.nombre = nombre ?? usuario.nombre;
     usuario.email = email ?? usuario.email;
     usuario.rol = rol ?? usuario.rol;
+
+    // Actualizar contraseña solo si viene y no está vacía
+    if (password && password.trim() !== "") {
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+      usuario.password = hashedPassword;
+    }
 
     await usuario.save();
 
