@@ -10,6 +10,14 @@ app.use(cors());
 app.use(express.json());
 const rolesRoutes = require("./routes/roles");
 app.use("/api/roles", rolesRoutes);
+app.get('/api/pingdb', async (req, res) => {
+  try {
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    res.json({ status: "ok", collections });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
 
 
 // Conectar a MongoDB
