@@ -5,9 +5,10 @@ const User = require("./models/User"); // Asegúrate de que esta ruta esté bien
 
 async function crearAdmin() {
   try {
+    console.log("Mongo URI:", process.env.MONGO_URI);
+
     await mongoose.connect(process.env.MONGO_URI);
     console.log("✅ Conectado a MongoDB");
-
     const email = "admin@admin.com";
     const yaExiste = await User.findOne({ email });
 
@@ -20,12 +21,12 @@ async function crearAdmin() {
     const admin = new User({
       nombre: "Administrador",
       email,
-      rol: "admin",
+      rol: "Administrador",
       password: hashedPassword,
     });
 
     await admin.save();
-    console.log("✅ Usuario admin creado correctamente");
+    console.log("✅ Usuario Administrador creado correctamente");
     process.exit();
   } catch (error) {
     console.error("❌ Error al crear usuario:", error);
@@ -34,3 +35,4 @@ async function crearAdmin() {
 }
 
 crearAdmin();
+
