@@ -117,6 +117,50 @@ app.delete("/api/usuarios/:id", async (req, res) => {
   }
 });
 
+const jwt = require("jsonwebtoken");
+
+// Ruta para login
+app.post("/api/auth/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  // Validar que existan email y password
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email y contraseña son obligatorios" });
+  }
+
+  try {
+    // Buscar usuario por email
+    const usuario = await User.findOne({ email });
+    if (!usuario) {
+      return res.status(401).json({ error: "Credenciales incorrectas" });
+    }
+
+    // Comparar password con el hash guardado
+    const passwordValido = await bcrypt.compare(password, usuario.password);
+    if (!passwordValido) {
+      return res.status(401).json({ error: "Credenciales incorrectas" });
+    }
+
+    // Crear token JWT
+    const payload = {
+      id: usuario._id,
+      nombre: usuario.nombre,
+      email: usuario.email,
+      rol: usuario.rol,
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+
+    // Responder con token y datos de usuario (sin password)
+    res.json({ token, usuario: payload });
+  } catch (error) {
+    res.status(500).json({ error: "Error en el servidor" });
+  }
+});
+
+
 // Iniciar servidor
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
