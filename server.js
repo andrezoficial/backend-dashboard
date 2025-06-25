@@ -1,17 +1,32 @@
+// server.js
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const bcrypt = require("bcrypt"); // <-- nuevo
-
+const bcrypt = require("bcrypt");
 const User = require("./models/User");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Conexión a la base de datos
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB conectado"))
+  .catch((err) => {
+    console.error("❌ Error de conexión a MongoDB:", err);
+  });
+
+// Rutas
 const rolesRoutes = require("./routes/roles");
+const authRoutes = require("./routes/auth");
+
 app.use("/api/roles", rolesRoutes);
-app.get('/api/pingdb', async (req, res) => {
+app.use("/api/auth", authRoutes);
+
+// Ruta para verificar conexión
+app.get("/api/pingdb", async (req, res) => {
   try {
     const collections = await mongoose.connection.db.listCollections().toArray();
     res.json({ status: "ok", collections });
@@ -20,20 +35,12 @@ app.get('/api/pingdb', async (req, res) => {
   }
 });
 
-// Conectar a MongoDB
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB conectado"))
-  .catch((err) => {
-    console.error("❌ Error de conexión a MongoDB:", err);
-  });
-
-// CRUD Usuarios
+// CRUD usuarios
 
 // Listar usuarios
 app.get("/api/usuarios", async (req, res) => {
   try {
-    const users = await User.find({}, "-password"); // Excluir password
+    const users = await User.find({}, "-password");
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: "Error al obtener usuarios" });
@@ -47,15 +54,13 @@ app.post("/api/usuarios", async (req, res) => {
     if (!nombre || !email || !password) {
       return res.status(400).json({ error: "Faltan datos obligatorios" });
     }
+
     const existe = await User.findOne({ email });
     if (existe) {
       return res.status(400).json({ error: "Email ya registrado" });
     }
 
-    // Hashear contraseña antes de guardar
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
+    const hashedPassword = await bcrypt.hash(password, 10);
     const nuevoUsuario = new User({ nombre, email, rol, password: hashedPassword });
     await nuevoUsuario.save();
 
@@ -75,7 +80,7 @@ app.post("/api/usuarios", async (req, res) => {
 app.put("/api/usuarios/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, email, rol, password } = req.body; // <-- agregué password
+    const { nombre, email, rol, password } = req.body;
 
     const usuario = await User.findById(id);
     if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
@@ -84,11 +89,8 @@ app.put("/api/usuarios/:id", async (req, res) => {
     usuario.email = email ?? usuario.email;
     usuario.rol = rol ?? usuario.rol;
 
-    // Actualizar contraseña solo si viene y no está vacía
     if (password && password.trim() !== "") {
-      const saltRounds = 10;
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
-      usuario.password = hashedPassword;
+      usuario.password = await bcrypt.hash(password, 10);
     }
 
     await usuario.save();
@@ -117,50 +119,6 @@ app.delete("/api/usuarios/:id", async (req, res) => {
   }
 });
 
-const jwt = require("jsonwebtoken");
-
-// Ruta para login
-app.post("/api/auth/login", async (req, res) => {
-  const { email, password } = req.body;
-
-  // Validar que existan email y password
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email y contraseña son obligatorios" });
-  }
-
-  try {
-    // Buscar usuario por email
-    const usuario = await User.findOne({ email });
-    if (!usuario) {
-      return res.status(401).json({ error: "Credenciales incorrectas" });
-    }
-
-    // Comparar password con el hash guardado
-    const passwordValido = await bcrypt.compare(password, usuario.password);
-    if (!passwordValido) {
-      return res.status(401).json({ error: "Credenciales incorrectas" });
-    }
-
-    // Crear token JWT
-    const payload = {
-      id: usuario._id,
-      nombre: usuario.nombre,
-      email: usuario.email,
-      rol: usuario.rol,
-    };
-
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "1d",
-    });
-
-    // Responder con token y datos de usuario (sin password)
-    res.json({ token, usuario: payload });
-  } catch (error) {
-    res.status(500).json({ error: "Error en el servidor" });
-  }
-});
-
-
 // Iniciar servidor
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Servidor corriendo en puerto ${PORT}`));
