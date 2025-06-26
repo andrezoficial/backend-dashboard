@@ -21,9 +21,11 @@ mongoose
 // Rutas
 const rolesRoutes = require("./routes/roles");
 const authRoutes = require("./routes/auth");
+const pacientesRoutes = require("./routes/pacientes");  // <-- agregué esta línea
 
 app.use("/api/roles", rolesRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/pacientes", pacientesRoutes);  // <-- y esta
 
 // Ruta para verificar conexión
 app.get("/api/pingdb", async (req, res) => {
