@@ -1,4 +1,4 @@
-const Paciente = require('../models/Paciente');
+const Paciente = require("../models/paciente");
 
 // Listar todos los pacientes
 exports.listarPacientes = async (req, res) => {
