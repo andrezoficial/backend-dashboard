@@ -23,6 +23,9 @@ const rolesRoutes = require("./routes/roles");
 const authRoutes = require("./routes/auth");
 const pacientesRoutes = require("./routes/pacientes");  // <-- agregué esta línea
 const citasRoutes = require("./routes/citas");
+const configuracionRoutes = require("./routes/configuracion");
+
+app.use("/api/configuracion", configuracionRoutes);
 app.use("/api/citas", citasRoutes);
 
 app.use("/api/roles", rolesRoutes);
