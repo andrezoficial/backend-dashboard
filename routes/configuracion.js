@@ -6,6 +6,6 @@ const configuracionController = require("../controllers/configuracionController"
 router.get("/:usuarioId", configuracionController.obtenerConfiguracion);
 
 // Guardar o actualizar configuración de un usuario
-router.post("/:usuarioId", configuracionController.guardarConfiguracion);
+router.post("/:usuarioId", configuracionController.actualizarConfiguracion);
 
 module.exports = router;
