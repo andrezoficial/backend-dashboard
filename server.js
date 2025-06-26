@@ -5,12 +5,12 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 const User = require("./models/User");
-const chatRoutes = require("./routes/chat");
+const chatRoute = require("./routes/chatbot");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use("/api/chat", chatRoutes);
+app.use("/api/chatbot", chatRoute);
 
 // Conexión a la base de datos
 mongoose
