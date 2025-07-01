@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const axios = require("axios");
 const Message = require("../models/Message");
 require("dotenv").config();
 
@@ -14,7 +13,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Enviar mensaje (usuario)
+// Enviar mensaje (usuario) con mock para bot
 router.post("/", async (req, res) => {
   try {
     const { user, text } = req.body;
@@ -25,34 +24,17 @@ router.post("/", async (req, res) => {
     let botReply = null;
 
     if (user === "Usuario") {
-      // Llamada a OpenAI
-      const response = await axios.post(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          model: "gpt-3.5-turbo",
-          messages: [{ role: "user", content: text }],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const reply = response.data.choices[0].message.content;
-
+      // Mock: respuesta simulada sin llamar a OpenAI
       botReply = new Message({
         user: "Bot",
-        text: reply,
+        text: "¡Hola! Soy un bot de prueba. La IA está temporalmente desactivada.",
       });
-
       await botReply.save();
     }
 
     res.status(201).json({ userMessage: message, botMessage: botReply });
   } catch (error) {
-    console.error("Error al enviar mensaje:", error.response?.data || error.message);
+    console.error("Error al enviar mensaje:", error.message);
     res.status(500).json({ error: "Error al enviar mensaje" });
   }
 });
