@@ -52,7 +52,7 @@ router.post("/forgot-password", async (req, res) => {
     user.resetTokenExpire = Date.now() + 3600000; // 1 hora
     await user.save();
 
-    const resetUrl = `https://main.d2l6wfab4sd4yu.amplifyapp.com/ResetPassword${token}`;
+    const resetUrl = `https://main.d2l6wfab4sd4yu.amplifyapp.com/reset-password${token}`;
 
     const html = `
       <h3>Recuperación de contraseña</h3>
