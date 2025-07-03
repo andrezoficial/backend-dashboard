@@ -1,7 +1,10 @@
 const Cita = require('../models/Cita');
 const Paciente = require('../models/paciente');
 const nodemailer = require('nodemailer');
-const ics = require('ics'); // Necesitas instalar con: npm install ics
+const { createEvent } = require('ics');
+const twilio = require('twilio'); 
+
+const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
 exports.listarCitas = async (req, res) => {
   try {
@@ -20,7 +23,6 @@ exports.crearCita = async (req, res) => {
   }
 
   try {
-    // Verificar que el paciente exista
     const existePaciente = await Paciente.findById(paciente);
     if (!existePaciente) {
       return res.status(400).json({ error: 'Paciente no existe' });
@@ -29,30 +31,19 @@ exports.crearCita = async (req, res) => {
     const nuevaCita = new Cita({ paciente, fecha, motivo });
     await nuevaCita.save();
 
-    // Preparar transporter
-    const transporter = nodemailer.createTransport({
-      service: 'Gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    // Formatear fecha para mostrar en correo (ejemplo en español local)
     const fechaObj = new Date(fecha);
     const fechaFormateada = fechaObj.toLocaleString('es-CO', {
       dateStyle: 'full',
       timeStyle: 'short',
     });
 
-    // Preparar fechas en formato para Google Calendar (UTC y sin separadores)
+    // Google Calendar link
     const startDateUTC = fechaObj.toISOString().replace(/-|:|\.\d+/g, "");
-    const endDateObj = new Date(fechaObj.getTime() + 60 * 60 * 1000); // +1 hora
+    const endDateObj = new Date(fechaObj.getTime() + 60 * 60 * 1000);
     const endDateUTC = endDateObj.toISOString().replace(/-|:|\.\d+/g, "");
-
     const googleCalendarUrl = `https://calendar.google.com/calendar/r/eventedit?text=Cita%20médica&dates=${startDateUTC}/${endDateUTC}&details=${encodeURIComponent(motivo)}&location=Consultorio&trp=true`;
 
-    // Crear evento .ics con la librería ics
+    // ICS file
     const [year, month, day, hour, minute] = [
       fechaObj.getUTCFullYear(),
       fechaObj.getUTCMonth() + 1,
@@ -61,27 +52,30 @@ exports.crearCita = async (req, res) => {
       fechaObj.getUTCMinutes(),
     ];
 
-    // Evento de 1 hora
-    const duration = { hours: 1, minutes: 0 };
-
-    const event = {
+    const { error, value } = createEvent({
       start: [year, month, day, hour, minute],
-      duration,
+      duration: { hours: 1 },
       title: 'Cita médica',
       description: motivo,
       location: 'Consultorio',
       status: 'CONFIRMED',
-      organizer: { name: 'Tu Clínica', email: process.env.EMAIL_USER },
-      attendees: [{ name: existePaciente.nombreCompleto, email: existePaciente.correo, rsvp: true }],
-    };
+      organizer: { name: 'ViorClinic', email: process.env.EMAIL_USER },
+      attendees: [{ name: existePaciente.nombreCompleto, email: existePaciente.correo }],
+    });
 
-    const { error, value } = ics.createEvent(event);
     if (error) {
       console.error('Error creando archivo ics:', error);
-      return res.status(500).json({ error: 'Error generando archivo de calendario' });
     }
 
-    // Opciones mail con HTML y adjunto .ics
+    // Enviar correo
+    const transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
     const mailOptions = {
       to: existePaciente.correo,
       subject: 'Confirmación de cita médica',
@@ -91,25 +85,17 @@ exports.crearCita = async (req, res) => {
           <p>Hola <strong>${existePaciente.nombreCompleto}</strong>,</p>
           <p>Tu cita médica ha sido agendada con éxito. Aquí tienes los detalles:</p>
           <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px; border: 1px solid #ccc;"><strong>Fecha y hora:</strong></td>
-              <td style="padding: 8px; border: 1px solid #ccc;">${fechaFormateada}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border: 1px solid #ccc;"><strong>Motivo:</strong></td>
-              <td style="padding: 8px; border: 1px solid #ccc;">${motivo}</td>
-            </tr>
+            <tr><td style="padding: 8px;"><strong>Fecha y hora:</strong></td><td>${fechaFormateada}</td></tr>
+            <tr><td style="padding: 8px;"><strong>Motivo:</strong></td><td>${motivo}</td></tr>
           </table>
           <p>
-            <a href="${googleCalendarUrl}" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #4285F4; color: white; border-radius: 4px; text-decoration: none; font-weight: bold;">
+            <a href="${googleCalendarUrl}" target="_blank" style="display:inline-block;padding:10px 20px;background:#4285F4;color:white;text-decoration:none;border-radius:4px;font-weight:bold;">
               Agregar a Google Calendar
             </a>
           </p>
-          <p>Gracias por confiar en nosotros.</p>
-          <p>Saludos,<br/><strong>Tu equipo médico</strong></p>
+          <p>Gracias por confiar en nosotros.<br/>Equipo <strong>ViorClinic</strong></p>
         </div>
       `,
-      // Adjuntar archivo .ics en formato Buffer
       icalEvent: {
         filename: 'cita-medica.ics',
         method: 'REQUEST',
@@ -119,10 +105,30 @@ exports.crearCita = async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
+    // WhatsApp
+    const mensaje = `👋 Hola ${existePaciente.nombreCompleto},
+
+🗓️ Te confirmamos que tu cita médica ha sido agendada.
+
+📅 *Fecha:* ${fechaObj.toLocaleDateString()}
+🕒 *Hora:* ${fechaObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+📋 *Motivo:* ${motivo}
+
+📍 Ubicación: Consultorio ViorClinic
+🔗 Si deseas agregarla a tu Google Calendar: ${googleCalendarUrl}
+
+Gracias por confiar en nosotros. 😊`;
+
+    await client.messages.create({
+      from: 'whatsapp:+14155238886',
+      to: `whatsapp:+57${existePaciente.telefono}`,
+      body: mensaje,
+    });
+
     res.status(201).json(nuevaCita);
   } catch (error) {
-    console.error('Error al crear cita o enviar correo:', error);
-    res.status(500).json({ error: 'Error al crear cita o enviar correo' });
+    console.error('Error al crear cita:', error);
+    res.status(500).json({ error: 'Error al crear cita o enviar notificaciones' });
   }
 };
 
