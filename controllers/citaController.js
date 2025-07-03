@@ -1,4 +1,5 @@
 const Cita = require('../models/Cita');
+const Paciente = require('../models/Paciente'); // Importa el modelo Paciente
 
 exports.listarCitas = async (req, res) => {
   try {
@@ -17,6 +18,12 @@ exports.crearCita = async (req, res) => {
   }
 
   try {
+    // Verificar que el paciente exista
+    const existePaciente = await Paciente.findById(paciente);
+    if (!existePaciente) {
+      return res.status(400).json({ error: 'Paciente no existe' });
+    }
+
     const nuevaCita = new Cita({ paciente, fecha, motivo });
     await nuevaCita.save();
     res.status(201).json(nuevaCita);
