@@ -1,5 +1,5 @@
 const Cita = require('../models/Cita');
-const Paciente = require('../models/Paciente'); // Importa el modelo Paciente
+const Paciente = require('../models/paciente'); // Importa el modelo Paciente
 
 exports.listarCitas = async (req, res) => {
   try {
