@@ -13,8 +13,10 @@ router.get("/", async (req, res) => {
           { nombre: { $regex: query, $options: "i" } }
         ]
       },
-      "codigo nombre" // solo estos campos
-    ).limit(20);
+      "codigo nombre" // solo campos que quieres devolver
+    )
+    .limit(20)
+    .lean();
 
     const options = cups.map(cup => ({
       value: cup.codigo,
@@ -30,9 +32,9 @@ router.get("/", async (req, res) => {
 
 // GET /api/cups/:codigo — Obtener detalles completos de un CUPS por código
 router.get("/:codigo", async (req, res) => {
-  const { codigo } = req.params;
+  const codigo = req.params.codigo.toUpperCase();
   try {
-    const cup = await Cups.findOne({ codigo: codigo.toUpperCase() }); // opcional uppercase
+    const cup = await Cups.findOne({ codigo });
     if (!cup) return res.status(404).json({ message: "CUPS no encontrado" });
     res.json(cup);
   } catch (err) {
