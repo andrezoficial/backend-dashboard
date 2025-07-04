@@ -14,7 +14,8 @@ exports.listarCitas = async (req, res) => {
 };
 
 exports.crearCita = async (req, res) => {
-  const { paciente, fecha, motivo } = req.body;
+  const { paciente, fecha, motivo, notificarWhatsApp = true, notificarSMS = true } = req.body;
+  // notificarWhatsApp y notificarSMS son booleanos para controlar envíos
 
   if (!paciente || !fecha || !motivo) {
     return res.status(400).json({ error: 'Todos los campos son obligatorios' });
@@ -29,7 +30,7 @@ exports.crearCita = async (req, res) => {
     const nuevaCita = new Cita({ paciente, fecha, motivo });
     await nuevaCita.save();
 
-    // --- Configurar nodemailer
+    // Configurar nodemailer para email
     const transporter = nodemailer.createTransport({
       service: 'Gmail',
       auth: {
@@ -44,13 +45,7 @@ exports.crearCita = async (req, res) => {
       timeStyle: 'short',
     });
 
-    const startDateUTC = fechaObj.toISOString().replace(/-|:|\.\d+/g, '');
-    const endDateObj = new Date(fechaObj.getTime() + 60 * 60 * 1000);
-    const endDateUTC = endDateObj.toISOString().replace(/-|:|\.\d+/g, '');
-
-    const googleCalendarUrl = `https://calendar.google.com/calendar/r/eventedit?text=Cita%20médica&dates=${startDateUTC}/${endDateUTC}&details=${encodeURIComponent(motivo)}&location=Consultorio&trp=true`;
-
-    // --- Crear evento .ics
+    // Crear evento .ics para adjuntar
     const event = {
       start: [
         fechaObj.getUTCFullYear(),
@@ -73,7 +68,7 @@ exports.crearCita = async (req, res) => {
       console.error('Error creando archivo ics:', error);
     }
 
-    // --- Enviar correo con .ics
+    // Email options con HTML y archivo ics adjunto
     const mailOptions = {
       to: existePaciente.correo,
       subject: 'Confirmación de cita médica',
@@ -92,11 +87,6 @@ exports.crearCita = async (req, res) => {
               <td style="padding: 8px; border: 1px solid #ccc;">${motivo}</td>
             </tr>
           </table>
-          <p>
-            <a href="${googleCalendarUrl}" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #4285F4; color: white; border-radius: 4px; text-decoration: none; font-weight: bold;">
-              Agregar a Google Calendar
-            </a>
-          </p>
           <p>Gracias por confiar en nosotros.</p>
           <p>Saludos,<br/><strong>Tu equipo ViorClinic</strong></p>
         </div>
@@ -108,18 +98,33 @@ exports.crearCita = async (req, res) => {
       },
     };
 
+    // Enviar correo
     await transporter.sendMail(mailOptions);
 
-    // --- Enviar mensaje por WhatsApp
+    // Configurar cliente Twilio
     const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
-    const mensajeWhatsApp = `👋 Hola ${existePaciente.nombreCompleto}, tu cita en *ViorClinic* fue agendada para *${fechaFormateada}*. 🩺 Motivo: ${motivo}. ¡Te esperamos!`;
+    // Mensaje WhatsApp (sandbox)
+    if (notificarWhatsApp) {
+      const mensajeWhatsApp = `👋 Hola ${existePaciente.nombreCompleto}, tu cita en *ViorClinic* fue agendada para *${fechaFormateada}*. 🩺 Motivo: ${motivo}. ¡Te esperamos!`;
 
-    await client.messages.create({
-      body: mensajeWhatsApp,
-      from: 'whatsapp:+14155238886', // Twilio sandbox
-      to: `whatsapp:+57${existePaciente.telefono}`,
-    });
+      await client.messages.create({
+        body: mensajeWhatsApp,
+        from: 'whatsapp:+14155238886', // Twilio sandbox
+        to: `whatsapp:+57${existePaciente.telefono}`,
+      });
+    }
+
+    // Mensaje SMS tradicional
+    if (notificarSMS) {
+      const mensajeSMS = `Hola ${existePaciente.nombreCompleto}, tu cita en ViorClinic fue agendada para ${fechaFormateada}. Motivo: ${motivo}.`;
+
+      await client.messages.create({
+        body: mensajeSMS,
+        from: process.env.TWILIO_PHONE, // Número válido de Twilio para SMS, e.g. '+1XXXXXX'
+        to: `+57${existePaciente.telefono}`,
+      });
+    }
 
     res.status(201).json(nuevaCita);
   } catch (error) {
