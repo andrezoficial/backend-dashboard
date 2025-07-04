@@ -1,57 +1,60 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const HistoriaClinica = require('../models/HistoriaClinica');
+const HistoriaClinica = require("../models/HistoriaClinica");
 
-
-// Obtener historia clínica por pacienteId
-router.get('/:pacienteId/historia', async (req, res) => {
+// Obtener o crear historia clínica por pacienteId
+router.get("/:pacienteId/historia", async (req, res) => {
   try {
-    const historia = await HistoriaClinica.findOne({ paciente: req.params.pacienteId });
-    if (!historia) return res.status(404).json({ message: "Historia clínica no encontrada" });
-    res.json(historia);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al obtener la historia clínica" });
-  }
-});
+    const { pacienteId } = req.params;
+    console.log("🔍 Buscando historia para paciente:", pacienteId);
 
-// Guardar o actualizar historia clínica
-router.post('/:pacienteId/historia', async (req, res) => {
-  try {
-    const { motivoConsulta, antecedentes, examenFisico, diagnostico, tratamiento, recomendaciones, procedimiento } = req.body;
+    let historia = await HistoriaClinica.findOne({ pacienteId });
 
-    let historia = await HistoriaClinica.findOne({ paciente: req.params.pacienteId });
-
-    if (historia) {
-      // Actualizar
-      historia.motivoConsulta = motivoConsulta;
-      historia.antecedentes = antecedentes;
-      historia.examenFisico = examenFisico;
-      historia.diagnostico = diagnostico;
-      historia.tratamiento = tratamiento;
-      historia.recomendaciones = recomendaciones;
-      historia.procedimiento = procedimiento;
-
-      await historia.save();
-    } else {
-      // Crear nueva
+    // Si no existe, la creamos vacía
+    if (!historia) {
+      console.log("📭 No se encontró historia, creando nueva vacía...");
       historia = new HistoriaClinica({
-        paciente: req.params.pacienteId,
-        motivoConsulta,
-        antecedentes,
-        examenFisico,
-        diagnostico,
-        tratamiento,
-        recomendaciones,
-        procedimiento,
+        pacienteId,
+        motivoConsulta: "",
+        antecedentes: "",
+        examenFisico: "",
+        diagnostico: "",
+        tratamiento: "",
+        recomendaciones: "",
+        cups: [],
       });
       await historia.save();
     }
 
     res.json(historia);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al guardar la historia clínica" });
+    console.error("❌ Error cargando o creando historia clínica:", error);
+    res.status(500).json({ message: "Error interno del servidor" });
+  }
+});
+
+// Crear o actualizar historia clínica
+router.post("/:pacienteId/historia", async (req, res) => {
+  try {
+    const { pacienteId } = req.params;
+    const datosHistoria = req.body;
+
+    let historia = await HistoriaClinica.findOne({ pacienteId });
+
+    if (historia) {
+      // Actualizar
+      Object.assign(historia, datosHistoria);
+      await historia.save();
+    } else {
+      // Crear nueva historia
+      historia = new HistoriaClinica({ pacienteId, ...datosHistoria });
+      await historia.save();
+    }
+
+    res.json(historia);
+  } catch (error) {
+    console.error("❌ Error guardando historia clínica:", error);
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 });
 
