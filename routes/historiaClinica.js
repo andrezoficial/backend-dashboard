@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const HistoriaClinica = require("../models/HistoriaClinica");
-const Cup = require("../models/Cup"); // Modelo de CUPS con { codigo, nombre }
+const Cup = require("../models/Cups");
 
 router.get("/:pacienteId/historia", async (req, res) => {
   try {
