@@ -23,6 +23,8 @@
     "mongodb": "^6.17.0",
     "mongoose": "^8.15.1",
     "nodemailer": "^7.0.4",
-    "twilio": "^5.7.2"
+    "pdf2table": "^0.0.2",
+    "twilio": "^5.7.2",
+    "xlsx": "^0.18.5"
   }
 }
