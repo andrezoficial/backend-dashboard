@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const HistoriaClinica = require("../models/HistoriaClinica");
 const Cup = require("../models/Cups");
-const Paciente = require("../models/Paciente");  // Agrega este require
+const Paciente = require("../models/paciente");  // Agrega este require
 
 // GET /:pacienteId/historia — obtener historia clínica (crear si no existe)
 router.get("/:pacienteId/historia", async (req, res) => {
