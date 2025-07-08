@@ -2,7 +2,18 @@ const mongoose = require("mongoose");
 
 const historiaClinicaSchema = new mongoose.Schema({
   pacienteId: { type: mongoose.Schema.Types.ObjectId, ref: "Paciente", required: true, unique: true },
-  motivoConsulta: String,
+  motivoConsulta: {
+    type: String,
+    enum: [
+      "Medicina general",
+      "Odontología",
+      "Optometría",
+      "Medicina con especialistas",
+      "Laboratorios"
+    ],
+    required: true,
+    default: "Medicina general"
+  },
   antecedentes: String,
   examenFisico: String,
   diagnostico: String,
