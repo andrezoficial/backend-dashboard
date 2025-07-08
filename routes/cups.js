@@ -1,92 +1,43 @@
-// routes/historiaClinica.js
 const express = require("express");
-const router = require("express").Router();
-const HistoriaClinica = require("../models/HistoriaClinica");
-const Cup = require("../models/Cups");
+const router = express.Router();
+const Cups = require("../models/Cups");
 
-// GET /api/pacientes/:pacienteId/historia
-// — Solo consulta; devuelve 404 si no existe
-router.get("/:pacienteId/historia", async (req, res) => {
+// GET /api/cups?q=texto — Buscar CUPS por código o nombre (limit 20)
+router.get("/", async (req, res) => {
+  const query = req.query.q || "";
   try {
-    const { pacienteId } = req.params;
-    const historia = await HistoriaClinica.findOne({ pacienteId });
+    const cups = await Cups.find(
+      {
+        $or: [
+          { codigo: { $regex: query, $options: "i" } },
+          { nombre: { $regex: query, $options: "i" } },
+        ],
+      },
+      "codigo nombre"
+    ).limit(20).lean();
 
-    if (!historia) {
-      return res.status(404).json({ message: "Historia clínica no encontrada" });
-    }
-
-    // Obtener detalles de CUPS guardados
-    const cupsCodigos = historia.cups || [];
-    const cupsDetalles = await Cup
-      .find({ codigo: { $in: cupsCodigos } })
-      .select("codigo nombre")
-      .lean();
-
-    const cupsConNombre = cupsDetalles.map(cup => ({
-      codigo: cup.codigo,
-      nombre: cup.nombre
+    const options = cups.map((cup) => ({
+      value: cup.codigo,
+      label: `${cup.codigo} - ${cup.nombre}`,
     }));
 
-    res.json({
-      ...historia.toObject(),
-      cupsConNombre
-    });
-  } catch (error) {
-    console.error("Error al obtener historia clínica:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
+    res.json(options);
+  } catch (err) {
+    console.error("Error al buscar CUPS:", err);
+    res.status(500).json({ message: "Error al buscar CUPS" });
   }
 });
 
-// POST /api/pacientes/:pacienteId/historia
-// — Crea si no existe, o actualiza si ya existe
-router.post("/:pacienteId/historia", async (req, res) => {
+// GET /api/cups/:codigo — Obtener detalles completos por código
+router.get("/:codigo", async (req, res) => {
+  const codigo = req.params.codigo.toUpperCase();
   try {
-    const { pacienteId } = req.params;
-    const {
-      motivoConsulta,
-      antecedentes,
-      examenFisico,
-      diagnostico,
-      tratamiento,
-      recomendaciones,
-      cups
-    } = req.body;
-
-    if (!motivoConsulta) {
-      return res.status(400).json({ message: "Motivo de consulta es obligatorio" });
-    }
-
-    let historia = await HistoriaClinica.findOne({ pacienteId });
-
-    if (!historia) {
-      // Crear nueva historia
-      historia = new HistoriaClinica({
-        pacienteId,
-        motivoConsulta,
-        antecedentes: antecedentes || "",
-        examenFisico: examenFisico || "",
-        diagnostico: diagnostico || "",
-        tratamiento: tratamiento || "",
-        recomendaciones: recomendaciones || "",
-        cups: Array.isArray(cups) ? cups : []
-      });
-    } else {
-      // Actualizar campos existentes
-      historia.motivoConsulta = motivoConsulta;
-      historia.antecedentes     = antecedentes;
-      historia.examenFisico     = examenFisico;
-      historia.diagnostico      = diagnostico;
-      historia.tratamiento      = tratamiento;
-      historia.recomendaciones  = recomendaciones;
-      historia.cups             = Array.isArray(cups) ? cups : [];
-    }
-
-    await historia.save();
-    res.json(historia);
-
-  } catch (error) {
-    console.error("Error al guardar historia clínica:", error);
-    res.status(500).json({ message: "Error interno al guardar historia clínica" });
+    const cup = await Cups.findOne({ codigo });
+    if (!cup) return res.status(404).json({ message: "CUPS no encontrado" });
+    res.json(cup);
+  } catch (err) {
+    console.error("Error al obtener CUPS:", err);
+    res.status(500).json({ message: "Error al obtener CUPS" });
   }
 });
 
