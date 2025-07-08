@@ -1,6 +1,6 @@
 // routes/historiaClinica.js
 const express = require("express");
-const router = express.Router();
+const router = require("express").Router();
 const HistoriaClinica = require("../models/HistoriaClinica");
 const Cup = require("../models/Cups");
 
