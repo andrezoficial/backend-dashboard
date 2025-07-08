@@ -13,7 +13,7 @@ router.get("/:pacienteId/historia", async (req, res) => {
     if (!historia) {
       historia = new HistoriaClinica({
         pacienteId,
-        motivoConsulta: "",  // Puede quedarse vacío inicialmente
+        motivoConsulta: "",
         antecedentes: "",
         examenFisico: "",
         diagnostico: "",
@@ -24,17 +24,10 @@ router.get("/:pacienteId/historia", async (req, res) => {
       await historia.save();
     }
 
-    // Buscar nombres de los cups guardados (diagnósticos/procedimientos)
+    // Buscar detalles de los cups para mostrar nombre junto con código
     const cupsCodigos = historia.cups || [];
-
-    // Buscar en colección de CUPS para obtener nombres
     const cupsDetalles = await Cup.find({ codigo: { $in: cupsCodigos } }).select("codigo nombre");
-
-    // Mapear para devolver sólo código y nombre
-    const cupsConNombre = cupsDetalles.map((cup) => ({
-      codigo: cup.codigo,
-      nombre: cup.nombre,
-    }));
+    const cupsConNombre = cupsDetalles.map(cup => ({ codigo: cup.codigo, nombre: cup.nombre }));
 
     res.json({
       ...historia.toObject(),
