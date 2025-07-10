@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Paciente = require("../models/Paciente");
+const Paciente = require("../models/paciente");
 const { enviarCorreo } = require("../utils/email");
 
 // POST: Enviar código al correo
