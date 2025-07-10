@@ -7,7 +7,8 @@ const pacienteSchema = new mongoose.Schema({
   sexo: { type: String, enum: ['Masculino', 'Femenino', 'Otro'], required: true },
   correo: { type: String, required: true, unique: true },
   telefono: { type: String, required: true },
-  eps: { type: String, required: true }
+  eps: { type: String, required: true },
+  codigoVerificacion: { type: String, default: null }, // <-- nuevo campo
 }, { timestamps: true });
 
 module.exports = mongoose.model('Paciente', pacienteSchema);

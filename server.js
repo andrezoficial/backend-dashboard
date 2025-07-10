@@ -8,7 +8,7 @@ const User = require("./models/User");
 const chatRoute = require("./routes/chatbot");
 const cupsRoutes = require("./routes/cups");
 const historiaClinicaRoutes = require("./routes/historiaClinica");
-
+const verificacionRoutes = require("./routes/verificacion");
 
 const app = express();
 app.use(cors());
@@ -16,6 +16,7 @@ app.use(express.json());
 app.use("/api/chatbot", chatRoute);
 app.use("/api/cups", cupsRoutes);
 app.use("/api/pacientes", historiaClinicaRoutes);
+app.use("/api/verificacion", verificacionRoutes);
 
 // Conexión a la base de datos
 mongoose
