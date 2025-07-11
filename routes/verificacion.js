@@ -10,7 +10,7 @@ router.post("/enviar-codigo", async (req, res) => {
     const correo = (req.body.correo || "").trim().toLowerCase();
     if (!correo) return res.status(400).json({ message: "Correo obligatorio" });
 
-    const paciente = await Paciente.findOne({ correo });
+    const paciente = await Paciente.findOne({ correo: new RegExp(`^${correo}$`, 'i') });
     if (!paciente) return res.status(404).json({ message: "No encontramos ese correo en nuestros registros. Verifica e intenta de nuevo." });
 
     // Eliminar códigos previos para ese correo
@@ -44,10 +44,14 @@ router.post("/validar-codigo", async (req, res) => {
     const correo = (req.body.correo || "").trim().toLowerCase();
     const codigoIngresado = (req.body.codigo || "").trim();
 
-    if (!correo || !codigoIngresado) return res.status(400).json({ message: "Correo y código son obligatorios." });
+    if (!correo || !codigoIngresado) {
+      return res.status(400).json({ message: "Correo y código son obligatorios." });
+    }
 
-    const registro = await CodigoVerificacion.findOne({ correo });
-    if (!registro) return res.status(404).json({ message: "Código no encontrado o expirado. Solicita un nuevo código." });
+    const registro = await CodigoVerificacion.findOne({ correo: new RegExp(`^${correo}$`, 'i') });
+    if (!registro) {
+      return res.status(404).json({ message: "Código no encontrado o expirado. Solicita un nuevo código." });
+    }
 
     if (registro.intentos >= 5) {
       await CodigoVerificacion.deleteOne({ correo });
@@ -63,8 +67,7 @@ router.post("/validar-codigo", async (req, res) => {
     // Código correcto: eliminar registro para no reutilizar
     await CodigoVerificacion.deleteOne({ correo });
 
-    // Opcional: devolver info del paciente para agenda
-    const paciente = await Paciente.findOne({ correo });
+    const paciente = await Paciente.findOne({ correo: new RegExp(`^${correo}$`, 'i') });
     if (!paciente) return res.status(404).json({ message: "Paciente no encontrado." });
 
     return res.json({ message: "Código validado correctamente.", paciente });
