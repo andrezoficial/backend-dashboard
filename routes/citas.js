@@ -4,6 +4,19 @@ const Cita = require("../models/Cita");
 const Paciente = require("../models/paciente");
 const { enviarCorreo } = require("../utils/email"); 
 
+// Obtener todas las citas con información del paciente
+router.get("/", async (req, res) => {
+  try {
+    const citas = await Cita.find()
+      .populate("paciente", "nombreCompleto correo")
+      .sort({ fecha: 1 });
+    res.json(citas);
+  } catch (error) {
+    console.error("Error al obtener citas:", error);
+    res.status(500).json({ message: "Error al obtener citas" });
+  }
+});
+
 // Crear cita y enviar correo
 router.post("/", async (req, res) => {
   try {
