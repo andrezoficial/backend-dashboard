@@ -1,8 +1,8 @@
-
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp-relay.brevo.com",
+  port: 587,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 
 async function enviarCorreo({ to, subject, html }) {
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: '"Soporte ViorClinic" <soporte@viorclinic.es>', 
     to,
     subject,
     html,

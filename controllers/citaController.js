@@ -1,6 +1,6 @@
 const Cita = require('../models/Cita');
 const Paciente = require('../models/paciente');
-const nodemailer = require('nodemailer');
+const { enviarCorreo } = require('../utils/email'); // Importa la función enviarCorreo centralizada
 const { createEvent } = require('ics');
 const twilio = require('twilio');
 
@@ -15,7 +15,6 @@ exports.listarCitas = async (req, res) => {
 
 exports.crearCita = async (req, res) => {
   const { paciente, fecha, motivo, notificarWhatsApp = true, notificarSMS = true } = req.body;
-  // notificarWhatsApp y notificarSMS son booleanos para controlar envíos
 
   if (!paciente || !fecha || !motivo) {
     return res.status(400).json({ error: 'Todos los campos son obligatorios' });
@@ -30,22 +29,12 @@ exports.crearCita = async (req, res) => {
     const nuevaCita = new Cita({ paciente, fecha, motivo });
     await nuevaCita.save();
 
-    // Configurar nodemailer para email
-    const transporter = nodemailer.createTransport({
-      service: 'Gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
     const fechaObj = new Date(fecha);
     const fechaFormateada = fechaObj.toLocaleString('es-CO', {
       dateStyle: 'full',
       timeStyle: 'short',
     });
 
-    // Crear evento .ics para adjuntar
     const event = {
       start: [
         fechaObj.getUTCFullYear(),
@@ -68,8 +57,8 @@ exports.crearCita = async (req, res) => {
       console.error('Error creando archivo ics:', error);
     }
 
-    // Email options con HTML y archivo ics adjunto
-    const mailOptions = {
+    // Usar enviarCorreo para enviar el email con Brevo SMTP
+    await enviarCorreo({
       to: existePaciente.correo,
       subject: 'Confirmación de cita médica',
       html: `
@@ -96,32 +85,27 @@ exports.crearCita = async (req, res) => {
         method: 'REQUEST',
         content: value,
       },
-    };
+    });
 
-    // Enviar correo
-    await transporter.sendMail(mailOptions);
-
-    // Configurar cliente Twilio
+    // Configurar cliente Twilio para WhatsApp y SMS
     const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
-    // Mensaje WhatsApp (sandbox)
     if (notificarWhatsApp) {
       const mensajeWhatsApp = `👋 Hola ${existePaciente.nombreCompleto}, tu cita en *ViorClinic* fue agendada para *${fechaFormateada}*. 🩺 Motivo: ${motivo}. ¡Te esperamos!`;
 
       await client.messages.create({
         body: mensajeWhatsApp,
-        from: 'whatsapp:+14155238886', // Twilio sandbox
+        from: 'whatsapp:+14155238886', // Twilio sandbox para WhatsApp
         to: `whatsapp:+57${existePaciente.telefono}`,
       });
     }
 
-    // Mensaje SMS tradicional
     if (notificarSMS) {
       const mensajeSMS = `Hola ${existePaciente.nombreCompleto}, tu cita en ViorClinic fue agendada para ${fechaFormateada}. Motivo: ${motivo}.`;
 
       await client.messages.create({
         body: mensajeSMS,
-        from: process.env.TWILIO_PHONE, // Número válido de Twilio para SMS, e.g. '+1XXXXXX'
+        from: process.env.TWILIO_PHONE,
         to: `+57${existePaciente.telefono}`,
       });
     }
