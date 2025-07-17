@@ -4,6 +4,8 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 const User = require("./models/User");
+
+// Importar rutas (todos arriba, antes de usarlas)
 const chatRoute = require("./routes/chatbot");
 const cupsRoutes = require("./routes/cups");
 const historiaClinicaRoutes = require("./routes/historiaClinica");
@@ -11,9 +13,16 @@ const verificacionRoutes = require("./routes/verificacion");
 const motivosRouter = require("./routes/motivos");
 const horariosRouter = require("./routes/horarios");
 const citasRoutes = require("./routes/citas");
+const rolesRoutes = require("./routes/roles");
+const authRoutes = require("./routes/auth");
+const pacientesRoutes = require("./routes/pacientes");
+const configuracionRoutes = require("./routes/configuracion");
+
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Uso de rutas
 app.use("/api/chatbot", chatRoute);
 app.use("/api/cups", cupsRoutes);
 app.use("/api/pacientes", historiaClinicaRoutes);
@@ -22,6 +31,11 @@ app.use("/api/motivos", motivosRouter);
 app.use("/api/horarios", horariosRouter);
 app.use("/api/citas", citasRoutes);
 
+app.use("/api/configuracion", configuracionRoutes);
+app.use("/api/roles", rolesRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/pacientes", pacientesRoutes);
+
 // Conexión a la base de datos
 mongoose
   .connect(process.env.MONGO_URI)
@@ -29,20 +43,6 @@ mongoose
   .catch((err) => {
     console.error("❌ Error de conexión a MongoDB:", err);
   });
-
-// Rutas
-const rolesRoutes = require("./routes/roles");
-const authRoutes = require("./routes/auth");
-const pacientesRoutes = require("./routes/pacientes");  // <-- agregué esta línea
-const citasRoutes = require("./routes/citas");
-const configuracionRoutes = require("./routes/configuracion");
-
-app.use("/api/configuracion", configuracionRoutes);
-app.use("/api/citas", citasRoutes);
-
-app.use("/api/roles", rolesRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/pacientes", pacientesRoutes);  // <-- y esta
 
 // Ruta para verificar conexión
 app.get("/api/pingdb", async (req, res) => {
