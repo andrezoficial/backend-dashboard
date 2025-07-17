@@ -10,6 +10,7 @@ const historiaClinicaRoutes = require("./routes/historiaClinica");
 const verificacionRoutes = require("./routes/verificacion");
 const motivosRouter = require("./routes/motivos");
 const horariosRouter = require("./routes/horarios");
+const citasRoutes = require("./routes/citas");
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -19,6 +20,7 @@ app.use("/api/pacientes", historiaClinicaRoutes);
 app.use("/api/verificacion", verificacionRoutes);
 app.use("/api/motivos", motivosRouter);
 app.use("/api/horarios", horariosRouter);
+app.use("/api/citas", citasRoutes);
 
 // Conexión a la base de datos
 mongoose
