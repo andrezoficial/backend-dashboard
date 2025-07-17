@@ -54,6 +54,17 @@ router.post("/", async (req, res) => {
   }
 });
 
-// resto de rutas igual...
+// Motivos de consulta predefinidos
+router.get("/motivos", (req, res) => {
+  const motivos = [
+    "Medicina general",
+    "Odontología",
+    "Optometría",
+    "Medicina con especialistas",
+    "Laboratorios",
+  ];
+
+  res.json(motivos);
+});
 
 module.exports = router;
