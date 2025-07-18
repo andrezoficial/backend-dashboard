@@ -8,15 +8,14 @@ router.get('/buscar', async (req, res) => {
   if (!termino) return res.status(400).json({ error: 'Falta parámetro termino' });
 
   try {
-    const resultados = await buscarICD11(termino);
-    // Mapear solo lo necesario para el frontend
-    const opciones = resultados.map(item => ({
-      code:  item.theCode,
-      title: item.title
+    const entidades = await buscarICD11(termino);
+    // Mapea solo lo necesario para el frontend
+    const opciones = entidades.map(e => ({
+      code:  e.theCode,
+      title: e.title
     }));
     res.json(opciones);
   } catch (error) {
-    console.error('Error al buscar ICD-11:', error);
     res.status(500).json({ error: 'Error al consultar ICD-11' });
   }
 });
