@@ -5,8 +5,12 @@ const Motivo = require("../models/Motivo");
 router.get("/", async (req, res) => {
   try {
     const motivos = await Motivo.find({});
-    // Si quieres que solo retorne en formato { value, label }:
-    const motivosFormateados = motivos.map(m => ({ value: m.nombre.toLowerCase(), label: m.nombre }));
+
+    const motivosFormateados = motivos.map(m => ({
+      value: m.value.toLowerCase(),
+      label: m.label
+    }));
+
     res.json(motivosFormateados);
   } catch (error) {
     console.error("Error al obtener motivos:", error);
