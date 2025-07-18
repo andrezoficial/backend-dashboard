@@ -1,31 +1,20 @@
+// services/icd11Service.js
 const axios = require('axios');
 
-const ICD11_BASE = 'http://localhost:8080';      // Tu contenedor Docker
-const RELEASE_ID  = '2025-01';                  // Versión aprobada por MSPS
+const ICD11_BASE = 'https://id.who.int/icd/release/11/2023-02';
+const LANGUAGE   = 'es';
 
 async function buscarICD11(termino) {
-  if (!termino) return [];
+  const url = `${ICD11_BASE}/entity/search`;
+  const params = { q: termino, language: LANGUAGE };
+  const headers = {
+    'API-Version': 'v2',
+    Accept:        'application/json'
+  };
 
-  try {
-    const { data } = await axios.get(
-      `${ICD11_BASE}/icd/entity/search`,
-      {
-        params: {
-          q: termino,
-          releaseId: RELEASE_ID
-        },
-        headers: {
-          'API-Version': 'v2',
-          'Accept':      'application/json'
-        }
-      }
-    );
-    // data.destinationEntities es el array de resultados
-    return data.destinationEntities || [];
-  } catch (error) {
-    console.error('ICD-11 API error:', error.response?.data || error.message);
-    throw error;
-  }
+  const response = await axios.get(url, { params, headers });
+  // La respuesta contiene { destinationEntities: [...] }
+  return response.data.destinationEntities || [];
 }
 
 module.exports = { buscarICD11 };
