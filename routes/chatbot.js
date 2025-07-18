@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Message = require("../models/Message");
-const Cita = require("../models/cita");
+const Cita = require("../models/Cita");
 const CodigoVerificacion = require("../models/codigoverificacion");
 const Paciente = require("../models/Paciente");
 const { enviarCorreo } = require("../utils/email");
