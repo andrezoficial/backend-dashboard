@@ -1,16 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const Cita = require("../models/Cita");
+const Cita = require("../models/cita");
 
 const horariosFijos = ["09:00", "11:00", "14:00"];
 
 router.get("/", async (req, res) => {
   try {
-    const { fecha } = req.query; // esperamos formato 'YYYY-MM-DD'
+    const { fecha } = req.query; // formato 'YYYY-MM-DD'
     if (!fecha) return res.status(400).json({ message: "Fecha requerida" });
 
-    // Buscar citas en esa fecha (sin importar hora)
-    // Extraemos la fecha de la cita para comparar solo día-mes-año
     const inicio = new Date(fecha + "T00:00:00.000Z");
     const fin = new Date(fecha + "T23:59:59.999Z");
 
@@ -18,16 +16,9 @@ router.get("/", async (req, res) => {
       fecha: { $gte: inicio, $lte: fin },
     });
 
-    // Obtener horas ocupadas de las citas
-    const horasOcupadas = citasDelDia.map((cita) => {
-      const h = cita.fecha.toISOString().substring(11, 16);
-      return h;
-    });
+    const horasOcupadas = citasDelDia.map(cita => cita.fecha.toISOString().substring(11, 16));
 
-    // Filtrar horarios fijos quitando ocupados
-    const horariosDisponibles = horariosFijos.filter(
-      (hora) => !horasOcupadas.includes(hora)
-    );
+    const horariosDisponibles = horariosFijos.filter(hora => !horasOcupadas.includes(hora));
 
     res.json(horariosDisponibles);
   } catch (error) {

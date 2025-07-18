@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const Cita = require("../models/Cita");
-const Paciente = require("../models/paciente");
+const Cita = require("./models/Cita");
+const Paciente = require("./models/paciente");
 const { enviarCorreo } = require("../utils/email");
 const ics = require("ics");
 
@@ -28,7 +28,9 @@ router.get("/", async (req, res) => {
 
 // Endpoint para obtener motivos válidos
 router.get("/motivos", (req, res) => {
-  res.json(MOTIVOS_VALIDOS);
+  res.json(
+    MOTIVOS_VALIDOS.map((m) => ({ value: m, label: m.charAt(0).toUpperCase() + m.slice(1) }))
+  );
 });
 
 // Crear nueva cita
@@ -83,7 +85,6 @@ router.post("/", async (req, res) => {
         console.error("Error generando archivo .ics:", error);
       }
 
-      // Enviar correo de confirmación
       await enviarCorreo({
         to: pacienteEncontrado.correo,
         subject: "Confirmación de Cita - ViorClinic",
@@ -108,9 +109,9 @@ router.post("/", async (req, res) => {
           {
             filename: "cita-viorclinic.ics",
             content: value,
-            contentType: "text/calendar"
-          }
-        ]
+            contentType: "text/calendar",
+          },
+        ],
       });
 
       res.status(201).json(nuevaCita);
