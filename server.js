@@ -17,6 +17,7 @@ const rolesRoutes = require("./routes/roles");
 const authRoutes = require("./routes/auth");
 const pacientesRoutes = require("./routes/pacientes");
 const configuracionRoutes = require("./routes/configuracion");
+const icd11Routes = require('./routes/icd11');
 const { startRecordatorio24h } = require('./utils/scheduler');
 startRecordatorio24h();
 
@@ -37,6 +38,7 @@ app.use("/api/configuracion", configuracionRoutes);
 app.use("/api/roles", rolesRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/pacientes", pacientesRoutes);
+app.use('/api/icd11', icd11Routes);
 
 // Conexión a la base de datos
 mongoose
