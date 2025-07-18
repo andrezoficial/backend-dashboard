@@ -17,6 +17,8 @@ const rolesRoutes = require("./routes/roles");
 const authRoutes = require("./routes/auth");
 const pacientesRoutes = require("./routes/pacientes");
 const configuracionRoutes = require("./routes/configuracion");
+const { startRecordatorio24h } = require('./utils/scheduler');
+startRecordatorio24h();
 
 const app = express();
 app.use(cors());

@@ -85,8 +85,13 @@ router.post("/", async (req, res) => {
 
     await enviarCorreo({
       to: pacienteEncontrado.correo,
-      subject: "Confirmación de Cita - ViorClinic",
+      subject: "Confirmación de cita en ViorClinic",
       html,
+      icalEvent: {
+        filename: "cita-medica.ics",
+        method: "REQUEST",
+        content: value,
+      },
     });
 
     res.status(201).json(nuevaCita);
