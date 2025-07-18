@@ -9,12 +9,22 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-async function enviarCorreo({ to, subject, html }) {
+async function enviarCorreo({ to, subject, html, icalEvent }) {
   const mailOptions = {
-    from: '"Soporte ViorClinic" <soporte@viorclinic.es>', 
+    from: '"Soporte ViorClinic" <soporte@viorclinic.es>',
     to,
     subject,
     html,
+    attachments: icalEvent
+      ? [
+          {
+            filename: icalEvent.filename,
+            content: icalEvent.content,
+            method: icalEvent.method,
+            contentType: "text/calendar",
+          },
+        ]
+      : [],
   };
 
   return transporter.sendMail(mailOptions);

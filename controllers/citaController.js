@@ -1,6 +1,6 @@
 const Cita = require('../models/Cita');
 const Paciente = require('../models/paciente');
-const { enviarCorreo } = require('../utils/email'); // Importa la función enviarCorreo centralizada
+const { enviarCorreo } = require('../utils/email');
 const { createEvent } = require('ics');
 const twilio = require('twilio');
 
@@ -53,33 +53,29 @@ exports.crearCita = async (req, res) => {
     };
 
     const { error, value } = createEvent(event);
-    if (error) {
-      console.error('Error creando archivo ics:', error);
-    }
+    if (error) console.error('Error creando archivo ics:', error);
 
-    // Usar enviarCorreo para enviar el email con Brevo SMTP
+    // ✅ Correo con diseño profesional
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; background-color: #f9f9f9;">
+        <div style="background-color: #ffffff; border-radius: 10px; padding: 20px; max-width: 600px; margin: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+          <img src="https://www.viorclinic.es/logo.png" alt="Logo ViorClinic" style="max-width: 150px; display: block; margin: 0 auto 20px;">
+          <h2 style="text-align: center; color: #007bff;">¡Tu cita ha sido confirmada!</h2>
+          <p>Hola <strong>${existePaciente.nombreCompleto}</strong>,</p>
+          <p>Tu cita en <strong>ViorClinic</strong> ha sido programada correctamente.</p>
+          <p><strong>📅 Fecha:</strong> ${fechaFormateada}<br>
+             <strong>📝 Motivo:</strong> ${motivo}</p>
+          <p>Por favor llega con al menos 10 minutos de anticipación. Si necesitas reprogramar, contáctanos con tiempo.</p>
+          <p style="margin-top: 30px;">Gracias por confiar en nosotros,</p>
+          <p><strong>Equipo ViorClinic</strong></p>
+        </div>
+      </div>
+    `;
+
     await enviarCorreo({
       to: existePaciente.correo,
-      subject: 'Confirmación de cita médica',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-          <h2 style="color: #2c3e50;">Confirmación de Cita Médica</h2>
-          <p>Hola <strong>${existePaciente.nombreCompleto}</strong>,</p>
-          <p>Tu cita médica ha sido agendada con éxito. Aquí tienes los detalles:</p>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px; border: 1px solid #ccc;"><strong>Fecha y hora:</strong></td>
-              <td style="padding: 8px; border: 1px solid #ccc;">${fechaFormateada}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border: 1px solid #ccc;"><strong>Motivo:</strong></td>
-              <td style="padding: 8px; border: 1px solid #ccc;">${motivo}</td>
-            </tr>
-          </table>
-          <p>Gracias por confiar en nosotros.</p>
-          <p>Saludos,<br/><strong>Tu equipo ViorClinic</strong></p>
-        </div>
-      `,
+      subject: 'Confirmación de cita en ViorClinic',
+      html,
       icalEvent: {
         filename: 'cita-medica.ics',
         method: 'REQUEST',
@@ -87,7 +83,6 @@ exports.crearCita = async (req, res) => {
       },
     });
 
-    // Configurar cliente Twilio para WhatsApp y SMS
     const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
     if (notificarWhatsApp) {
@@ -95,7 +90,7 @@ exports.crearCita = async (req, res) => {
 
       await client.messages.create({
         body: mensajeWhatsApp,
-        from: 'whatsapp:+14155238886', // Twilio sandbox para WhatsApp
+        from: 'whatsapp:+14155238886',
         to: `whatsapp:+57${existePaciente.telefono}`,
       });
     }
