@@ -1,6 +1,6 @@
 const cron = require('node-cron');
-const Cita = require('./models/Cita');
-const Paciente = require('./models/paciente');
+const Cita = require('../models/Cita');
+const Paciente = require('../models/paciente');
 const { enviarCorreo } = require('./email');
 
 function startRecordatorio24h() {
