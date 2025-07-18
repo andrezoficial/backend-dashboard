@@ -6,10 +6,8 @@ router.get("/", async (req, res) => {
   try {
     const motivos = await Motivo.find({});
 
-    const motivosFormateados = motivos.map(m => ({
-      value: m.value.toLowerCase(),
-      label: m.label
-    }));
+    const motivosFormateados = motivos.map(m => ({ value: m.value.toLowerCase(), label: m.label }));
+     
 
     res.json(motivosFormateados);
   } catch (error) {
