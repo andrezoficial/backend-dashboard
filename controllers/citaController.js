@@ -55,11 +55,11 @@ exports.crearCita = async (req, res) => {
     const { error, value } = createEvent(event);
     if (error) console.error('Error creando archivo ics:', error);
 
-    // ✅ Correo con diseño profesional
+    // HTML del correo con diseño profesional y logo público
     const html = `
       <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; background-color: #f9f9f9;">
         <div style="background-color: #ffffff; border-radius: 10px; padding: 20px; max-width: 600px; margin: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-          <img src="https://www.viorclinic.es/logo.png" alt="Logo ViorClinic" style="max-width: 150px; display: block; margin: 0 auto 20px;">
+          <img src="https://www.viorclinic.es/logo192.png" alt="Logo ViorClinic" style="max-width: 150px; display: block; margin: 0 auto 20px;">
           <h2 style="text-align: center; color: #007bff;">¡Tu cita ha sido confirmada!</h2>
           <p>Hola <strong>${existePaciente.nombreCompleto}</strong>,</p>
           <p>Tu cita en <strong>ViorClinic</strong> ha sido programada correctamente.</p>
