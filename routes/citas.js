@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const Cita = require("./models/Cita");
-const Paciente = require("./models/paciente");
+const Cita = require("../models/Cita");
+const Paciente = require("../models/paciente");
 const { enviarCorreo } = require("../utils/email");
 const ics = require("ics");
 
