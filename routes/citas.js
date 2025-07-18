@@ -12,13 +12,16 @@ const MOTIVOS_VALIDOS = [
   "laboratorios"
 ];
 
-// Obtener todas las citas
+// Obtener todas las citas con datos completos del paciente
 router.get("/", async (req, res) => {
   try {
-    const citas = await Cita.find().populate("paciente", "nombre correo");
+    const citas = await Cita.find()
+      .populate("paciente", "nombreCompleto correo") // ajusta campos que necesites mostrar
+      .exec();
     res.json(citas);
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener las citas", error });
+    console.error(error);
+    res.status(500).json({ message: "Error al obtener citas" });
   }
 });
 
@@ -32,8 +35,12 @@ router.post("/", async (req, res) => {
   try {
     const { paciente, fecha, motivo } = req.body;
 
-    // Validación de motivo
-    if (!MOTIVOS_VALIDOS.includes(motivo)) {
+    if (!paciente || !fecha || !motivo) {
+      return res.status(400).json({ message: "Faltan datos obligatorios" });
+    }
+
+    // Validación de motivo (minusculas para evitar error)
+    if (!MOTIVOS_VALIDOS.includes(motivo.toLowerCase())) {
       return res.status(400).json({ message: "Motivo inválido" });
     }
 
@@ -50,7 +57,7 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ message: "Paciente no encontrado" });
     }
 
-    const nuevaCita = new Cita({ paciente, fecha, motivo });
+    const nuevaCita = new Cita({ paciente, fecha, motivo: motivo.toLowerCase() });
     await nuevaCita.save();
 
     // Enviar correo de confirmación
@@ -58,9 +65,9 @@ router.post("/", async (req, res) => {
       to: pacienteEncontrado.correo,
       subject: "Confirmación de Cita - ViorClinic",
       html: `
-        <h2>Hola ${pacienteEncontrado.nombre},</h2>
+        <h2>Hola ${pacienteEncontrado.nombreCompleto},</h2>
         <p>Tu cita ha sido registrada con éxito.</p>
-        <p><strong>Motivo:</strong> ${motivo}</p>
+        <p><strong>Motivo:</strong> ${motivo.toLowerCase()}</p>
         <p><strong>Fecha:</strong> ${new Date(fecha).toLocaleString("es-CO")}</p>
         <br>
         <p>Gracias por confiar en ViorClinic.</p>
