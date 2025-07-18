@@ -60,18 +60,33 @@ router.post("/", async (req, res) => {
     const nuevaCita = new Cita({ paciente, fecha, motivo: motivo.toLowerCase() });
     await nuevaCita.save();
 
-    // Enviar correo de confirmación
+    // Formatear la fecha para mostrar bonita en el correo
+    const fechaFormateada = fechaCita.toLocaleString("es-CO", {
+      dateStyle: "full",
+      timeStyle: "short",
+    });
+
+    // Enviar correo con diseño profesional y bonito
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; background-color: #f9f9f9;">
+        <div style="background-color: #ffffff; border-radius: 10px; padding: 20px; max-width: 600px; margin: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+          <img src="https://www.viorclinic.es/logo192.png" alt="Logo ViorClinic" style="max-width: 150px; display: block; margin: 0 auto 20px;">
+          <h2 style="text-align: center; color: #007bff;">¡Tu cita ha sido confirmada!</h2>
+          <p>Hola <strong>${pacienteEncontrado.nombreCompleto}</strong>,</p>
+          <p>Tu cita en <strong>ViorClinic</strong> ha sido programada correctamente.</p>
+          <p><strong>📅 Fecha:</strong> ${fechaFormateada}<br>
+             <strong>📝 Motivo:</strong> ${motivo.toLowerCase()}</p>
+          <p>Por favor llega con al menos 10 minutos de anticipación. Si necesitas reprogramar, contáctanos con tiempo.</p>
+          <p style="margin-top: 30px;">Gracias por confiar en nosotros,</p>
+          <p><strong>Equipo ViorClinic</strong></p>
+        </div>
+      </div>
+    `;
+
     await enviarCorreo({
       to: pacienteEncontrado.correo,
       subject: "Confirmación de Cita - ViorClinic",
-      html: `
-        <h2>Hola ${pacienteEncontrado.nombreCompleto},</h2>
-        <p>Tu cita ha sido registrada con éxito.</p>
-        <p><strong>Motivo:</strong> ${motivo.toLowerCase()}</p>
-        <p><strong>Fecha:</strong> ${new Date(fecha).toLocaleString("es-CO")}</p>
-        <br>
-        <p>Gracias por confiar en ViorClinic.</p>
-      `
+      html,
     });
 
     res.status(201).json(nuevaCita);
