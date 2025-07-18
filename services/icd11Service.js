@@ -1,35 +1,31 @@
 const axios = require('axios');
 
-const ICD_API_BASE_URL = 'http://localhost:8080'; // tu API ICD-11 corriendo en docker
+const ICD11_BASE = 'http://localhost:8080';      // Tu contenedor Docker
+const RELEASE_ID  = '2025-01';                  // Versión aprobada por MSPS
 
-async function buscarDiagnosticos(termino) {
+async function buscarICD11(termino) {
+  if (!termino) return [];
+
   try {
-    if (!termino) return [];
-
-    // Ejemplo de endpoint ICD-11 para buscar términos (ajusta si cambió la API)
-    // Aquí se usa el endpoint swagger: GET /content/mms/search?q={termino}
-    const url = `${ICD_API_BASE_URL}/content/mms/search`;
-
-    const response = await axios.get(url, {
-      params: { q: termino },
-      headers: {
-        Accept: 'application/json',
-      },
-    });
-
-    // La respuesta puede variar según la API, ajusta según el JSON que recibas
-    // Por ejemplo, suponemos que response.data.items es un array de diagnósticos
-    const items = response.data?.items || [];
-
-    // Mapear para devolver solo lo necesario para frontend
-    return items.map((item) => ({
-      code: item?.code || item?.id || '',
-      label: item?.title || item?.description || 'Sin título',
-    }));
+    const { data } = await axios.get(
+      `${ICD11_BASE}/icd/entity/search`,
+      {
+        params: {
+          q: termino,
+          releaseId: RELEASE_ID
+        },
+        headers: {
+          'API-Version': 'v2',
+          'Accept':      'application/json'
+        }
+      }
+    );
+    // data.destinationEntities es el array de resultados
+    return data.destinationEntities || [];
   } catch (error) {
-    console.error('Error en buscarDiagnosticos ICD:', error.message);
-    return [];
+    console.error('ICD-11 API error:', error.response?.data || error.message);
+    throw error;
   }
 }
 
-module.exports = { buscarDiagnosticos };
+module.exports = { buscarICD11 };
