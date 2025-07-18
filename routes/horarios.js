@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Cita = require("./models/cita");
+const Cita = require("../models/Cita");
 
 const horariosFijos = ["09:00", "11:00", "14:00"];
 
