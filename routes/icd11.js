@@ -43,6 +43,7 @@ router.get("/buscar", async (req, res) => {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
+          "API-Version": "2023-01"  // <-- Header agregado
         },
       }
     );
