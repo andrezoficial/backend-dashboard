@@ -1,4 +1,3 @@
-// routes/icd11.js
 const express = require('express');
 const { buscarICD11 } = require('../services/icd11Service');
 const router = express.Router();
@@ -14,7 +13,8 @@ router.get('/buscar', async (req, res) => {
       title: e.title
     }));
     res.json(opciones);
-  } catch {
+  } catch (err) {
+    console.error('Error al consultar ICD-11:', err.response?.status, err.response?.data || err.message);
     res.status(500).json({ error: 'Error al consultar ICD-11' });
   }
 });
