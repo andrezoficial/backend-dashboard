@@ -41,11 +41,11 @@ router.get("/buscar", async (req, res) => {
       `https://id.who.int/icd/release/11/2023-01/mms/search?q=${encodeURIComponent(termino)}&flatResults=true`,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-          "API-Version": "v2"  // <-- Header agregado
-          "Accept-Language": "es"  // <-- Aquí agregamos el header para el idioma
-        },
+  Authorization: `Bearer ${token}`,
+  Accept: "application/json",
+  "API-Version": "v2",
+  "Accept-Language": "es"
+}
       }
     );
 
