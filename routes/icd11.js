@@ -44,6 +44,7 @@ router.get("/buscar", async (req, res) => {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
           "API-Version": "v2"  // <-- Header agregado
+          "Accept-Language": "es"  // <-- Aquí agregamos el header para el idioma
         },
       }
     );
