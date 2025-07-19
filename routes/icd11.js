@@ -28,10 +28,17 @@ async function getICDToken() {
   }
 }
 
-// Función simple para limpiar etiquetas HTML de un string
+// Función para limpiar etiquetas HTML de un string
 function limpiarHTML(texto) {
   if (!texto) return "";
   return texto.replace(/<[^>]+>/g, "");
+}
+
+// Función para extraer el código final de la URL
+function extraerCodigo(url) {
+  if (!url) return "sin código";
+  const partes = url.split("/");
+  return partes[partes.length - 1];
 }
 
 router.get("/buscar", async (req, res) => {
@@ -57,9 +64,8 @@ router.get("/buscar", async (req, res) => {
 
     const resultados = response.data?.destinationEntities || [];
 
-    // Mapear resultados limpiando HTML y asegurando código
     const resultadosLimpios = resultados.map(item => ({
-      code: item.code || item.id || "sin código",
+      code: extraerCodigo(item.code || item.id),
       title: limpiarHTML(item.title || item.name || "sin título"),
     }));
 
