@@ -1,10 +1,11 @@
+// routes/icd11.js
 const express = require('express');
 const { buscarICD11 } = require('../services/icd11Service');
 const router = express.Router();
 
 router.get('/buscar', async (req, res) => {
   const termino = req.query.termino;
-  if (!termino) return res.status(400).json({ error: 'Falta parámetro "termino"' });
+  if (!termino) return res.status(400).json({ error: 'Parámetro "termino" requerido' });
 
   try {
     const entidades = await buscarICD11(termino);
