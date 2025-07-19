@@ -19,12 +19,18 @@ exports.crearPaciente = async (req, res) => {
     sexo,
     correo,
     telefono,
-    eps
+    eps,
+    fechaNacimiento,
+    direccion = "",
+    estadoCivil = "Soltero(a)",
+    ocupacion = "",
+    contactoEmergenciaNombre = "",
+    contactoEmergenciaTelefono = "",
   } = req.body;
 
   // Validar campos obligatorios
-  if (!nombreCompleto || !tipoDocumento || !numeroDocumento || !sexo || !correo || !telefono || !eps) {
-    return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+  if (!nombreCompleto || !tipoDocumento || !numeroDocumento || !sexo || !correo || !telefono || !eps || !fechaNacimiento) {
+    return res.status(400).json({ error: 'Todos los campos obligatorios deben estar completos' });
   }
 
   // Validar tipoDocumento y sexo contra enum
@@ -56,6 +62,12 @@ exports.crearPaciente = async (req, res) => {
       correo,
       telefono,
       eps,
+      fechaNacimiento,
+      direccion,
+      estadoCivil,
+      ocupacion,
+      contactoEmergenciaNombre,
+      contactoEmergenciaTelefono,
     });
 
     await nuevoPaciente.save();
@@ -76,11 +88,17 @@ exports.actualizarPaciente = async (req, res) => {
     correo,
     telefono,
     eps,
+    fechaNacimiento,
+    direccion = "",
+    estadoCivil = "Soltero(a)",
+    ocupacion = "",
+    contactoEmergenciaNombre = "",
+    contactoEmergenciaTelefono = "",
   } = req.body;
 
-  // Validar campos obligatorios (puedes ser más flexible si quieres)
-  if (!nombreCompleto || !tipoDocumento || !numeroDocumento || !sexo || !correo || !telefono || !eps) {
-    return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+  // Validar campos obligatorios
+  if (!nombreCompleto || !tipoDocumento || !numeroDocumento || !sexo || !correo || !telefono || !eps || !fechaNacimiento) {
+    return res.status(400).json({ error: 'Todos los campos obligatorios deben estar completos' });
   }
 
   const tiposDocumentoValidos = ['cc', 'ti', 'ce'];
@@ -117,6 +135,12 @@ exports.actualizarPaciente = async (req, res) => {
     paciente.correo = correo;
     paciente.telefono = telefono;
     paciente.eps = eps;
+    paciente.fechaNacimiento = fechaNacimiento;
+    paciente.direccion = direccion;
+    paciente.estadoCivil = estadoCivil;
+    paciente.ocupacion = ocupacion;
+    paciente.contactoEmergenciaNombre = contactoEmergenciaNombre;
+    paciente.contactoEmergenciaTelefono = contactoEmergenciaTelefono;
 
     await paciente.save();
     res.json(paciente);
