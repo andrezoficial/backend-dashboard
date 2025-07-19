@@ -28,6 +28,12 @@ async function getICDToken() {
   }
 }
 
+// Función simple para limpiar etiquetas HTML de un string
+function limpiarHTML(texto) {
+  if (!texto) return "";
+  return texto.replace(/<[^>]+>/g, "");
+}
+
 router.get("/buscar", async (req, res) => {
   const { termino } = req.query;
 
@@ -41,19 +47,23 @@ router.get("/buscar", async (req, res) => {
       `https://id.who.int/icd/release/11/2023-01/mms/search?q=${encodeURIComponent(termino)}&flatResults=true`,
       {
         headers: {
-  Authorization: `Bearer ${token}`,
-  Accept: "application/json",
-  "API-Version": "v2",
-  "Accept-Language": "es"
-}
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "API-Version": "v2",
+          "Accept-Language": "es",
+        },
       }
     );
 
     const resultados = response.data?.destinationEntities || [];
-    res.json(resultados.map(item => ({
-      code: item.code,
-      title: item.title,
-    })));
+
+    // Mapear resultados limpiando HTML y asegurando código
+    const resultadosLimpios = resultados.map(item => ({
+      code: item.code || item.id || "sin código",
+      title: limpiarHTML(item.title || item.name || "sin título"),
+    }));
+
+    res.json(resultadosLimpios);
   } catch (error) {
     console.error("Error al consultar ICD-11:", error.response?.data || error.message);
     res.status(500).json({ error: "Error al consultar ICD-11" });
