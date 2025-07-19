@@ -5,7 +5,6 @@ const axios = require("axios");
 const CLIENT_ID = process.env.ICD_CLIENT_ID;
 const CLIENT_SECRET = process.env.ICD_CLIENT_SECRET;
 
-// Obtener token
 async function getICDToken() {
   try {
     const response = await axios.post(
@@ -29,15 +28,17 @@ async function getICDToken() {
   }
 }
 
-// Ruta para consultar un término
 router.get("/buscar", async (req, res) => {
-  const { query } = req.query;
-  if (!query) return res.status(400).json({ error: "Falta el parámetro 'query'" });
+  const { termino } = req.query;
+
+  if (!termino || termino.trim().length < 3) {
+    return res.status(400).json({ error: "El término de búsqueda debe tener al menos 3 caracteres" });
+  }
 
   try {
     const token = await getICDToken();
     const response = await axios.get(
-      `https://id.who.int/icd/release/11/2023-01/mms/search?q=${encodeURIComponent(query)}&flatResults=true`,
+      `https://id.who.int/icd/release/11/2023-01/mms/search?q=${encodeURIComponent(termino)}&flatResults=true`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -45,7 +46,12 @@ router.get("/buscar", async (req, res) => {
         },
       }
     );
-    res.json(response.data);
+
+    const resultados = response.data?.destinationEntities || [];
+    res.json(resultados.map(item => ({
+      code: item.code,
+      title: item.title,
+    })));
   } catch (error) {
     console.error("Error al consultar ICD-11:", error.response?.data || error.message);
     res.status(500).json({ error: "Error al consultar ICD-11" });
