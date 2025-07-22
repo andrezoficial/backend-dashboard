@@ -1,3 +1,4 @@
+// controllers/historiaclinica.js
 const HistoriaClinica = require("../models/HistoriaClinica");
 
 exports.obtenerHistoriaClinica = async (req, res) => {
@@ -38,7 +39,7 @@ exports.guardarHistoriaClinica = async (req, res) => {
       contactoEmergencia,
     } = req.body;
 
-    // Validar campos obligatorios (puedes mejorar validaciones aquí)
+    // Validar campos obligatorios mínimos
     if (!motivoConsulta) {
       return res.status(400).json({ message: "Motivo de consulta es obligatorio" });
     }
@@ -46,12 +47,15 @@ exports.guardarHistoriaClinica = async (req, res) => {
       return res.status(400).json({ message: "Faltan datos obligatorios para la historia clínica" });
     }
 
+    // Buscar historia existente
     let historia = await HistoriaClinica.findOne({ paciente: pacienteId });
 
     if (!historia) {
-  historia = new HistoriaClinica({ paciente: pacienteId });
-}
+      // Crear historia nueva con pacienteId
+      historia = new HistoriaClinica({ paciente: pacienteId });
+    }
 
+    // Actualizar todos los campos
     historia.motivoConsulta = motivoConsulta;
     historia.antecedentes = antecedentes;
     historia.examenFisico = examenFisico;
@@ -60,7 +64,6 @@ exports.guardarHistoriaClinica = async (req, res) => {
     historia.recomendaciones = recomendaciones;
     historia.cups = cups;
 
-    // Campos obligatorios y datos básicos
     historia.sexo = sexo;
     historia.fechaNacimiento = new Date(fechaNacimiento);
     historia.identificacion = identificacion;
