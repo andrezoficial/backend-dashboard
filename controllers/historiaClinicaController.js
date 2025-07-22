@@ -49,8 +49,8 @@ exports.guardarHistoriaClinica = async (req, res) => {
     let historia = await HistoriaClinica.findOne({ paciente: pacienteId });
 
     if (!historia) {
-      historia = new HistoriaClinica({ paciente: pacienteId });
-    }
+  historia = new HistoriaClinica({ paciente: pacienteId });
+}
 
     historia.motivoConsulta = motivoConsulta;
     historia.antecedentes = antecedentes;
