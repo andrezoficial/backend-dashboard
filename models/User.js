@@ -6,8 +6,8 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   rol: {
     type: String,
-    enum: ["Administrador", "Editor", "Lector"],
-    default: "Lector",
+    enum: ["Admin", "Medico", "Auxiliar"],
+    default: "Auxiliar",
   },
   password: { type: String, required: true },
   resetToken: String,
